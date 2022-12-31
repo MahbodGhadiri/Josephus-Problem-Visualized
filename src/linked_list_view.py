@@ -32,15 +32,25 @@ class LinkedListView:
             self.window,
             width= self.frame_width-10,
             height= self.frame_height-20,
-            scrollregion=(0,0,self.frame_width-10, self.frame_height-20)
+            scrollregion=(0,0,self.frame_width-10, self.frame_height-20),
+            bg="#0ba7b3",
+            borderwidth= 10
         )
         canvas = self.canvas
         # add horizontal scrollbar
-        hbar=tk.Scrollbar(self.window, orient=tk.HORIZONTAL)
+        hbar=tk.Scrollbar(
+            self.window, 
+            orient=tk.HORIZONTAL,
+            background= "#0ba7b3"
+        )
         hbar.pack(side=tk.TOP,fill=tk.X)
         hbar.config(command=canvas.xview)
         # add verticall scrollbar
-        vbar=tk.Scrollbar(self.window, orient=tk.VERTICAL)
+        vbar=tk.Scrollbar(
+            self.window,
+            orient= tk.VERTICAL,
+            background ="#0ba7b3"
+        )
         vbar.pack(side=tk.LEFT, fill=tk.Y)
         vbar.config(command=canvas.yview)
         # set scroll config for canvas
@@ -114,7 +124,7 @@ class LinkedListView:
     def showCurrent(self):
         current = self.head
         canvas = self.canvas
-        (x,y) = self.calculatePosition(current.next.data)
+        (x,y) = self.calculatePosition(current.next.next.data)
         canvas.xview_moveto(x/(self.frame_width-10)- (1000/self.frame_width))
         canvas.yview_moveto(y/(self.frame_height-20)- (400/self.frame_height))
 

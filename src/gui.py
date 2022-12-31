@@ -42,7 +42,10 @@ class GUI:
         self.button["state"] = "disable"
 
         # set window
-        window = tk.Toplevel(self.root)
+        window = tk.Toplevel(
+            self.root,
+            bg="#0ba7b3",
+        )
         self.window = window
         window.protocol("WM_DELETE_WINDOW", self.onWindowClose)
 
