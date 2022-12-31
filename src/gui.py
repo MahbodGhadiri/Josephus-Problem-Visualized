@@ -34,6 +34,7 @@ class GUI:
         self.windowIsOpen = False
         self.isKilling = False
         self.thread_num = 0
+        self.pause = False
 
         root.mainloop()
 
@@ -62,11 +63,13 @@ class GUI:
         # bind keyboard event
         window.bind("<space>", self.kill_next)
         window.bind("<Return>", self.auto_kill)
+        window.bind("p", self.pauseThreads )
 
         self.n = n
         self.drawLinkedList()
         #set size
         window.geometry(f"{self.frame_width}x{self.frame_height}")
+        self.showCurrent()
 
     def kill_next(self, event = None)->Node:
         if(self.isKilling):
@@ -74,6 +77,7 @@ class GUI:
         self.isKilling = True
         current = self.head
         canvas = self.canvas
+        self.showCurrent()
         canvas.itemconfig(self.getCircleId(current.data), fill="green")
         canvas.itemconfig(self.getCircleId(current.next.data), fill="red")
         current.next = current.next.next
@@ -87,11 +91,13 @@ class GUI:
 
     def kill_all(self):
         keepKilling = True
-        while keepKilling and self.windowIsOpen:
+        while keepKilling and self.windowIsOpen and not self.pause:
             keepKilling = self.kill_next()
             time.sleep(0.5)
+        self.thread_num -= 1
 
     def auto_kill(self, event):
+        self.pause = False
         if self.thread_num < 9:
             threading.Thread(target= self.kill_all).start()
             self.thread_num += 1
@@ -118,7 +124,7 @@ class GUI:
             self.window,
             width=self.frame_width-10,
             height=self.frame_height-20,
-            scrollregion=(0,0,self.frame_width, self.frame_height)
+            scrollregion=(0,0,self.frame_width-10, self.frame_height-20)
         )
         canvas = self.canvas
         # add horizontal scrollbar
@@ -176,3 +182,14 @@ class GUI:
         self.thread_num = 0
         self.button["state"] = "normal"
         self.window.destroy()
+
+    def pauseThreads(self, event = None):
+        self.pause = True
+
+    def showCurrent(self):
+        current = self.head
+        canvas = self.canvas
+        x = self.r_middle * sin(radians((current.next.data-1) * (self.theta) + 180)) + self.mid_position[0]
+        y = self.r_middle * cos(radians((current.next.data-1) * (self.theta) + 180)) + self.mid_position[1]
+        canvas.xview_moveto(x/(self.frame_width-10)- (1000/self.frame_width))
+        canvas.yview_moveto(y/(self.frame_height-20)- (400/self.frame_height))
