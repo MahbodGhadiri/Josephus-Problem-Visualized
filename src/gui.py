@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from constructs.linked_list import generate_linked_list, Node
 from math   import sin, cos, radians
+import threading
+import time
 
 _r = 12
 #adding a custom method to Canvas class
@@ -29,8 +31,9 @@ class GUI:
         self.button = tk.Button(text="Visualize", command=self.visualize)
         self.button.pack()
         #add state
-        self.hasDrawnlinkedList = False
+        self.windowIsOpen = False
         self.isKilling = False
+        self.thread_num = 0
 
         root.mainloop()
 
@@ -54,16 +57,18 @@ class GUI:
         #set window
         window = tk.Toplevel(self.root)
         self.window = window
+        self.windowIsOpen = True
+        window.protocol("WM_DELETE_WINDOW", self.onWindowClose)
         # bind keyboard event
         window.bind("<space>", self.kill_next)
-        window.bind("<Return>", self.kill_all)
+        window.bind("<Return>", self.auto_kill)
 
         self.n = n
         self.drawLinkedList()
         #set size
         window.geometry(f"{self.frame_width}x{self.frame_height}")
 
-    def kill_next(self, event)->Node:
+    def kill_next(self, event = None)->Node:
         if(self.isKilling):
             return
         self.isKilling = True
@@ -76,10 +81,20 @@ class GUI:
         canvas.itemconfig(self.getCircleId(self.head.data), fill="blue")
         if(current.next == current.next.next):
             self.showSurvivor()
+            return False
         self.isKilling = False
+        return True
 
-    def kill_all(self, event):
-        pass
+    def kill_all(self):
+        keepKilling = True
+        while keepKilling and self.windowIsOpen:
+            keepKilling = self.kill_next()
+            time.sleep(0.5)
+
+    def auto_kill(self, event):
+        if self.thread_num < 9:
+            threading.Thread(target= self.kill_all).start()
+            self.thread_num += 1
 
     def close_window(self):
         self.window.destroy()
@@ -142,6 +157,9 @@ class GUI:
         messagebox.showinfo("Survivor", f"{self.head.data} survives!")
         self.close_window()
         self.button["state"] = "normal"
+        self.isKilling = False
+        self.windowIsOpen = False
+        self.thread_num = 0
 
     def showInvalidInputDialog(self, input):
         messagebox.showerror('Input Error', f'Error: {input} is not a valid integer')
@@ -151,3 +169,10 @@ class GUI:
     
     def showInputTooSmallDialog(self, input):
         messagebox.showerror('Input Error', f'Error: input "{input}" cannot be negative!')
+
+    def onWindowClose(self):
+        self.windowIsOpen = False
+        self.isKilling = False
+        self.thread_num = 0
+        self.button["state"] = "normal"
+        self.window.destroy()
