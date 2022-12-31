@@ -4,109 +4,135 @@ from constructs.linked_list import generate_linked_list, Node
 from math   import sin, cos, radians
 import threading
 import time
+from dialogs import *
 
+# radius of circles
 _r = 12
-#adding a custom method to Canvas class
+
+# adding a custom method to Canvas class
 def _create_circle(self, x, y, r = _r, **kwargs):
     return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
 tk.Canvas.create_circle = _create_circle
 
 class GUI:
     def __init__(self):
-        #set root
+        # set root
         root = tk.Tk()
         self.root = root
-        #set title
+        # set title
         root.title("Josephos Problem")
-        root.geometry("300x300")
+        # set size 
+        root.geometry("300x100")
         root.minsize(300,100)
         root.maxsize(300,100)
-        #add labels
-        self.label = tk.Label(text="Enter a number:")
+        # add labels
+        self.label = tk.Label(text= "Enter a number:")
         self.label.pack()
-        #add entry
-        self.entry = tk.Entry(justify="center")
+        # add entry
+        self.entry = tk.Entry(justify= "center")
         self.entry.pack()
-        #add button
-        self.button = tk.Button(text="Visualize", command=self.visualize)
+        # add button
+        self.button = tk.Button(text= "Visualize", command= self.visualize)
         self.button.pack()
         #add state
         self.windowIsOpen = False
         self.isKilling = False
         self.thread_num = 0
-        self.pause = False
+        self.stop = False
 
         root.mainloop()
 
 
     def visualize(self):
-        try:
-            n = int(self.entry.get())
-        except:
-            self.showInvalidInputDialog(self.entry.get())
-            self.entry.delete(0, tk.END)
+        if not self.validateInput():
             return
-        if n<=0:
-            self.showInputTooSmallDialog(n)
-            self.entry.delete(0, tk.END)
-            return
-        if n> 500:
-            self.showInputTooLargeDialog(n)
-            self.entry.delete(0, tk.END)
-            return
+        # do not let user visualize another solution 
         self.button["state"] = "disable"
-        #set window
+
+        # set window
         window = tk.Toplevel(self.root)
         self.window = window
         self.windowIsOpen = True
         window.protocol("WM_DELETE_WINDOW", self.onWindowClose)
+
         # bind keyboard event
         window.bind("<space>", self.kill_next)
         window.bind("<Return>", self.auto_kill)
-        window.bind("p", self.pauseThreads )
+        window.bind("s", self.stopThreads )
 
-        self.n = n
+        # get input and draw its linked list view
+        self.n = int(self.entry.get())
         self.drawLinkedList()
         #set size
         window.geometry(f"{self.frame_width}x{self.frame_height}")
         self.showCurrent()
 
+    def validateInput(self):
+        try:
+            n = int(self.entry.get())
+        except:
+            showInvalidInputDialog(self.entry.get())
+            self.entry.delete(0, tk.END)
+            return False
+        if n <=0:
+            showInputTooSmallDialog(n)
+            self.entry.delete(0, tk.END)
+            return False
+        if n > 500:
+            showInputTooLargeDialog(n)
+            self.entry.delete(0, tk.END)
+            return False
+        return True
+
     def kill_next(self, event = None)->Node:
+        # to avoid multiple thread to change shared resource, lock the resource
         if(self.isKilling):
             return
         self.isKilling = True
+
+        # scroll to current node
         current = self.head
         canvas = self.canvas
         self.showCurrent()
+
+        # mark current node green. mark the next node as red.
         canvas.itemconfig(self.getCircleId(current.data), fill="green")
         canvas.itemconfig(self.getCircleId(current.next.data), fill="red")
+
+        # move to next next node and mark it blue
         current.next = current.next.next
         self.head = current.next
         canvas.itemconfig(self.getCircleId(self.head.data), fill="blue")
+
+        # check if the problem is solved
         if(current.next == current.next.next):
             self.showSurvivor()
             return False
+        
+        # unlock shared resource
         self.isKilling = False
+
         return True
 
     def kill_all(self):
+        '''
+            keep killing until kill_next() return false marking the end of solution
+            check if user has not close the window thus removing nodes
+            check if user has not stopped the thread
+        '''
         keepKilling = True
-        while keepKilling and self.windowIsOpen and not self.pause:
+        while keepKilling and self.windowIsOpen and not self.stop:
             keepKilling = self.kill_next()
             time.sleep(0.5)
         self.thread_num -= 1
 
     def auto_kill(self, event):
-        self.pause = False
+        self.stop = False
         if self.thread_num < 9:
             threading.Thread(target= self.kill_all).start()
             self.thread_num += 1
 
-    def close_window(self):
-        self.window.destroy()
-
     def drawLinkedList(self):
-
         n = self.n
         self.theta = 360/n
         '''
@@ -165,26 +191,15 @@ class GUI:
         self.button["state"] = "normal"
         self.isKilling = False
         self.windowIsOpen = False
-        self.thread_num = 0
-
-    def showInvalidInputDialog(self, input):
-        messagebox.showerror('Input Error', f'Error: {input} is not a valid integer')
-
-    def showInputTooLargeDialog(self, input):
-        messagebox.showerror('Input Error', f'Error: {input} is too large!')
-    
-    def showInputTooSmallDialog(self, input):
-        messagebox.showerror('Input Error', f'Error: input "{input}" cannot be negative!')
 
     def onWindowClose(self):
         self.windowIsOpen = False
         self.isKilling = False
-        self.thread_num = 0
         self.button["state"] = "normal"
         self.window.destroy()
 
-    def pauseThreads(self, event = None):
-        self.pause = True
+    def stopThreads(self, event = None):
+        self.stop = True
 
     def showCurrent(self):
         current = self.head
@@ -193,3 +208,6 @@ class GUI:
         y = self.r_middle * cos(radians((current.next.data-1) * (self.theta) + 180)) + self.mid_position[1]
         canvas.xview_moveto(x/(self.frame_width-10)- (1000/self.frame_width))
         canvas.yview_moveto(y/(self.frame_height-20)- (400/self.frame_height))
+
+    def close_window(self):
+        self.window.destroy()
