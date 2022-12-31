@@ -31,11 +31,6 @@ class GUI:
         # add button
         self.button = tk.Button(text= "Visualize", command= self.visualize)
         self.button.pack()
-        #add state
-        self.windowIsOpen = False
-        self.isKilling = False
-        self.thread_num = 0
-        self.stop = False
 
         root.mainloop()
 
@@ -49,7 +44,6 @@ class GUI:
         # set window
         window = tk.Toplevel(self.root)
         self.window = window
-        self.windowIsOpen = True
         window.protocol("WM_DELETE_WINDOW", self.onWindowClose)
 
         # get input and draw its linked list view
