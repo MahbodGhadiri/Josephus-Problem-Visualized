@@ -7,4 +7,4 @@ def showInputTooLargeDialog(input):
     messagebox.showerror('Input Error', f'Error: {input} is too large!')
 
 def showInputTooSmallDialog(input):
-    messagebox.showerror('Input Error', f'Error: input "{input}" cannot be negative!')
+    messagebox.showerror('Input Error', f'Error: "{input}" is too small!')

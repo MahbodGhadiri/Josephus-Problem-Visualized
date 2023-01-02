@@ -3,12 +3,12 @@ from constructs.linked_list import generate_linked_list, Node
 from math import sin, cos, radians
 import threading
 import time
-
 _r = 12
 class LinkedListView:
-    def __init__(self, window: tk.Toplevel, n: int, onFinish):
+    def __init__(self, window: tk.Toplevel, n: int, k: int, onFinish):
         self.window = window
         self.onFinish = onFinish
+        self.k = k
         self.drawLinkedList(n)
         self.showCurrent()
         self.thread_num = 0
@@ -24,7 +24,9 @@ class LinkedListView:
             theta is the angle between to circles
             r is the radius of small circles
         '''
-        self.r_middle = float((_r+1) / sin(radians(self.theta/2))) if float((_r+1) / sin(radians(self.theta/2)))>50 else 50
+        self.r_middle = float((_r+1) / sin(radians(self.theta/2))) if (float((_r+1) / sin(radians(self.theta/2)))>50) else 50
+        if(n==1): 
+            self.r_middle = 50
         self.frame_width = int(2*self.r_middle + 200)
         self.frame_height = self.frame_width 
         #add canvas
@@ -97,18 +99,22 @@ class LinkedListView:
             return
         self.isKilling = True
 
+        # get k
+        k = self.k
         # scroll to current node
         current = self.head
         canvas = self.canvas
         self.showCurrent()
-
+        before_next = current
+        for i in range(k-2):
+            before_next = before_next.next
         # mark current node green. mark the next node as red.
         canvas.itemconfig(self.getCircleId(current.data), fill="green")
-        canvas.itemconfig(self.getCircleId(current.next.data), fill="red")
+        canvas.itemconfig(self.getCircleId(before_next.next.data), fill="red")
 
         # move to next next node and mark it blue
-        current.next = current.next.next
-        self.head = current.next
+        before_next.next = before_next.next.next
+        self.head = before_next.next
         canvas.itemconfig(self.getCircleId(self.head.data), fill="blue")
 
         # check if the problem is solved

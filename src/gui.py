@@ -19,24 +19,30 @@ class GUI:
         # set title
         root.title("Josephos Problem")
         # set size 
-        root.geometry("300x100")
-        root.minsize(300,100)
-        root.maxsize(300,100)
+        root.geometry("300x130")
+        root.minsize(300,130)
+        root.maxsize(300,130)
         # add labels
-        self.label = tk.Label(text= "Enter a number:")
-        self.label.pack()
+        self.label = tk.Label(text= "Enter number of people in the circle:")
+        self.label.grid(row = 0, column=0, sticky= tk.W)
+        self.label = tk.Label(text= "Enter number of k:")
+        self.label.grid(row = 3, column=0, sticky= tk.W)
         # add entry
-        self.entry = tk.Entry(justify= "center")
-        self.entry.pack()
+        self.nEntry = tk.Entry(justify= "center")
+        self.nEntry.grid(row= 2, column=0)
+        self.kEntry = tk.Entry(justify= "center")
+        self.kEntry.grid(row= 4, column=0)
         # add button
         self.button = tk.Button(text= "Visualize", command= self.visualize)
-        self.button.pack()
+        self.button.grid(row= 5, column=0 )
 
         root.mainloop()
 
 
     def visualize(self):
-        if not self.validateInput():
+        if not self.validateInput(self.nEntry):
+            return
+        if not self.validateInput(self.kEntry):
             return
         # do not let user visualize another solution 
         self.button["state"] = "disable"
@@ -50,7 +56,7 @@ class GUI:
         window.protocol("WM_DELETE_WINDOW", self.onWindowClose)
 
         # get input and draw its linked list view
-        self.linkedListView = LinkedListView(window, int(self.entry.get()), self.showSurvivor)
+        self.linkedListView = LinkedListView(window, int(self.nEntry.get()), int(self.kEntry.get()), self.showSurvivor)
 
         # bind keyboard event
         window.bind("<space>", self.linkedListView.kill_next)
@@ -60,20 +66,20 @@ class GUI:
         #set size
         window.geometry(f"{self.linkedListView.frame_width}x{self.linkedListView.frame_height}")
 
-    def validateInput(self):
+    def validateInput(self, entry: tk.Entry):
         try:
-            n = int(self.entry.get())
+            n = int(entry.get())
         except:
-            showInvalidInputDialog(self.entry.get())
-            self.entry.delete(0, tk.END)
+            showInvalidInputDialog(entry.get())
+            entry.delete(0, tk.END)
             return False
         if n <=0:
             showInputTooSmallDialog(n)
-            self.entry.delete(0, tk.END)
+            entry.delete(0, tk.END)
             return False
         if n > 500:
             showInputTooLargeDialog(n)
-            self.entry.delete(0, tk.END)
+            entry.delete(0, tk.END)
             return False
         return True
 
